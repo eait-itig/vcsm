@@ -1,0 +1,9 @@
+paramiko>=3.3.1,<4
+pyvmomi
+pyvim
+lxml
+cryptography
+certvalidator
+asn1crypto
+tlslite-ng>=0.8.0a45
+ecdsa
