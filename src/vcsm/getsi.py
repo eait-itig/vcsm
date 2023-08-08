@@ -29,6 +29,7 @@ Implementation of getServiceInstance
 
 from .agentext import SSHAgentECDSAKey, Agent
 from tlslite import TLSConnection, HTTPTLSConnection, X509, X509CertChain, parsePEMKey
+from tlslite.errors import TLSAuthenticationTypeError, TLSNoAuthenticationError
 from xml.etree import ElementTree
 
 from http.client import HTTPSConnection
@@ -44,6 +45,28 @@ from pyVmomi import vim, SoapStubAdapter
 
 import json
 import logging
+
+class CertChecker:
+    def __init__(self, host: str):
+        self._host = host
+
+    def __call__(self, conn):
+        chain = conn.session.serverCertChain
+        if isinstance(chain, X509CertChain):
+            certs = [Certificate.load(bytes(x509.bytes)) for x509 in chain.x509List]
+            eecert = certs[0]
+            icerts = certs[1:]
+            vctx = ValidationContext(
+                allow_fetching = True,
+                revocation_mode = 'hard-fail')
+            val = CertificateValidator(eecert, icerts,
+                validation_context = vctx)
+            val.validate_tls(self._host)
+        elif chain:
+            raise TLSAuthenticationTypeError()
+        else:
+            raise TLSNoAuthenticationError()
+
 
 def getServiceInstance(host: str, upn: str):
     log = logging.getLogger('vcsm')
@@ -106,7 +129,8 @@ def getServiceInstance(host: str, upn: str):
         host = host,
         port = 3128,
         certChain = chain,
-        privateKey = pkey)
+        privateKey = pkey,
+        checker = CertChecker(host))
     smconn.request('POST', '/websso/SAML2/SSOCAC/vsphere.local?' + uri.query,
         body = urlencode({'CastleAuthorization': 'TLSClient Og=='}),
         headers = {'content-type': 'application/x-www-form-urlencoded'})
