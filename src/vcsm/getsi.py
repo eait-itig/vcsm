@@ -177,7 +177,7 @@ def getServiceInstance(host: str, upn: str):
     log.debug('creating service instance...')
 
     soap = SmartStubAdapter(host = host)
-    soap.cookie = 'vmware_soap_session=' + soap_cookie
+    soap.cookie = 'vmware_soap_session=' + soap_cookie + '; Path=/;'
 
     si = vim.ServiceInstance('ServiceInstance', soap)
     return si
