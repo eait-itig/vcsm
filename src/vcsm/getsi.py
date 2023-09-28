@@ -69,12 +69,19 @@ class CertChecker:
             raise TLSNoAuthenticationError()
 
 
-def getServiceInstance(host: str, upn: str):
+def getServiceInstance(host: str, upn: str, cacert: str = None):
     log = logging.getLogger('vcsm')
+
+    extra_trust_roots = []
+    if cacert is not None:
+        with open(cacert, 'rb') as f:
+            for _, _, der_bytes in pem.unarmor(f.read(), multiple=True):
+                extra_trust_roots.append(der_bytes)
 
     vctx = ValidationContext(
         allow_fetching = True,
-        revocation_mode = 'hard-fail')
+        revocation_mode = 'hard-fail',
+        extra_trust_roots=extra_trust_roots)
 
     agent = Agent()
     key = None
