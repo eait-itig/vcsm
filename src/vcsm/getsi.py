@@ -41,7 +41,8 @@ from certvalidator import CertificateValidator, ValidationContext
 from certvalidator.errors import PathValidationError
 from asn1crypto.x509 import Certificate
 
-from pyVmomi import vim, SoapStubAdapter
+from pyVmomi import vim
+from pyVim.connect import SmartStubAdapter
 
 import json
 import logging
@@ -175,7 +176,7 @@ def getServiceInstance(host: str, upn: str):
 
     log.debug('creating service instance...')
 
-    soap = SoapStubAdapter(host = host)
+    soap = SmartStubAdapter(host = host)
     soap.cookie = 'vmware_soap_session=' + soap_cookie
 
     si = vim.ServiceInstance('ServiceInstance', soap)
