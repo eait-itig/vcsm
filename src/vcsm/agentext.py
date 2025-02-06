@@ -34,9 +34,10 @@ from ecdsa.keys import VerifyingKey, BadSignatureError
 from ecdsa.ellipticcurve import Point
 from ecdsa.der import UnexpectedDER
 from ecdsa.util import sigencode_der, sigdecode_der
+from ecdsa.ellipticcurve import AbstractPoint, Point
 
 from tlslite.utils.ecdsakey import ECDSAKey
-from tlslite.utils.ecc import decodeX962Point, getCurveByName
+from tlslite.utils.ecc import getCurveByName
 from tlslite.utils.cryptomath import secureHash
 from tlslite.utils.compat import compatHMAC
 
@@ -112,8 +113,8 @@ class SSHAgentECDSAKey(ECDSAKey):
         msg = Message(self._key.asbytes())
         msg.get_text()  # alg
         msg.get_text()  # curve
-        self._point = decodeX962Point(msg.get_binary(), self._curve)
-        self.public_key = VerifyingKey.from_public_point(self._point, self._curve)
+        self.public_key = VerifyingKey.from_string(msg.get_binary(),
+            curve = self._curve)
         self.private_key = self.public_key
 
     def key_type(self):

@@ -29,6 +29,7 @@ Implementation of getServiceInstance
 
 from .agentext import SSHAgentECDSAKey, Agent
 from tlslite import TLSConnection, HTTPTLSConnection, X509, X509CertChain, parsePEMKey
+from tlslite.utils.pem import dePemList
 from tlslite.errors import TLSAuthenticationTypeError, TLSNoAuthenticationError
 from xml.etree import ElementTree
 
@@ -74,9 +75,9 @@ def getServiceInstance(host: str, upn: str, cacert: str = None):
 
     extra_trust_roots = []
     if cacert is not None:
-        with open(cacert, 'rb') as f:
-            for _, _, der_bytes in pem.unarmor(f.read(), multiple=True):
-                extra_trust_roots.append(der_bytes)
+        with open(cacert, 'r') as f:
+            for der_bytes in dePemList(f.read(), 'CERTIFICATE'):
+                extra_trust_roots.append(Certificate.load(bytes(der_bytes)))
 
     vctx = ValidationContext(
         allow_fetching = True,
